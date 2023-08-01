@@ -8,29 +8,28 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle, InputLabel, MenuItem, Select,
   TextField,
   Typography
 } from "@mui/material";
-import {useState} from "react";
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  paddingBottom:0,
-  textAlign: 'center',
-  color: theme.palette.text.secondary,
-  position: 'relative',
-  height: 'calc(100vh - 40px)'
-}));
+import {useEffect, useState} from "react";
+import roomApi from "../../apis/room.api.js";
 export default  function HomePage () {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState('public');
+  const [listRoom, setListRoom] = useState([])
 
   const handleClickOpen = () => {
     setOpen(true);
   };
+
+  useEffect(() => {
+    roomApi.getAll().then((response) => {
+      console.log(response)
+      console.log(response)
+      setListRoom(response.data.rooms)
+    })
+  }, [])
 
   const handleClose = () => {
     setOpen(false);
@@ -63,42 +62,19 @@ export default  function HomePage () {
         <Grid item xs={3}>
           <div className="left">
             <div className="list-inbox">
-              <div className="item-inbox active">
-                <div className="item-inbox-avatar">
-                  <img src="http://tophinhanhdep.net/wp-content/uploads/2015/12/anh-girl-xinh-9x-1.jpg" alt=""/>
-                </div>
-                <div className="item-inbox-right">
-                  <span className="inbox-name">Nguyen Hao</span>
-                  <span  className="inbox-message">Hom nay co viec gi the</span>
-                </div>
-              </div>
-              <div className="item-inbox">
-                <div className="item-inbox-avatar">
-                  <img src="http://tophinhanhdep.net/wp-content/uploads/2015/12/anh-girl-xinh-9x-1.jpg" alt=""/>
-                </div>
-                <div className="item-inbox-right">
-                  <span className="inbox-name">Nguyen Hao</span>
-                  <span  className="inbox-message">Hom nay co viec gi the</span>
-                </div>
-              </div>
-              <div className="item-inbox">
-                <div className="item-inbox-avatar">
-                  <img src="http://tophinhanhdep.net/wp-content/uploads/2015/12/anh-girl-xinh-9x-1.jpg" alt=""/>
-                </div>
-                <div className="item-inbox-right">
-                  <span className="inbox-name">Nguyen Hao</span>
-                  <span  className="inbox-message">Hom nay co viec gi the</span>
-                </div>
-              </div>
-              <div className="item-inbox">
-                <div className="item-inbox-avatar">
-                  <img src="http://tophinhanhdep.net/wp-content/uploads/2015/12/anh-girl-xinh-9x-1.jpg" alt=""/>
-                </div>
-                <div className="item-inbox-right">
-                  <span className="inbox-name">Nguyen Hao</span>
-                  <span  className="inbox-message">Hom nay co viec gi the</span>
-                </div>
-              </div>
+              {
+                listRoom.map((room, index) => (
+                  <div className="item-inbox" key={index}>
+                    <div className="item-inbox-avatar">
+                      <img src="http://tophinhanhdep.net/wp-content/uploads/2015/12/anh-girl-xinh-9x-1.jpg" alt=""/>
+                    </div>
+                    <div className="item-inbox-right">
+                      <span className="inbox-name">{room.groupName || 'Không có tên'}</span>
+                      <span  className="inbox-message">Hom nay co viec gi the</span>
+                    </div>
+                  </div>
+                ))
+              }
             </div>
             <div  className="new-group" onClick={handleClickOpen}>+</div>
           </div>
@@ -111,18 +87,21 @@ export default  function HomePage () {
                display: "flex",
                justifyContent: data.isAuthor ? "flex-end": "flex-start",
              }}>
-               <Box  sx={{
-                 textAlign:data.isAuthor ? "right": "left",
-                 backgroundColor: "primary.dark",
-                 marginBottom: "20px",
-                 padding: "4px 10px",
-                 width: "fit-content",
-                 opacity: data.isAuthor ? "100%": "70%",
-                 color:  "#ffffff",
-                 fontSize: "14px",
-                 borderRadius: "4px"
-               }}>
-                 <Typography > {data.message}</Typography>
+               <Box>
+                 {!data.isAuthor && <span className="username-message">Tên người gửi</span>}
+                 <Box  sx={{
+                   textAlign:data.isAuthor ? "right": "left",
+                   backgroundColor: "primary.dark",
+                   marginBottom: "20px",
+                   padding: "4px 10px",
+                   width: "fit-content",
+                   opacity: data.isAuthor ? "100%": "70%",
+                   color:  "#ffffff",
+                   fontSize: "16px",
+                   borderRadius: "4px"
+                 }}>
+                   <Typography > {data.message}</Typography>
+                 </Box>
                </Box>
              </Box>
            ))}

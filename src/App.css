@@ -90,7 +90,7 @@
 .item-inbox {
   display: flex;
   align-items: center;
-  padding: 10px 4px;
+  padding: 10px ;
 }
 .item-inbox:hover {
   background: #ccc;
@@ -100,12 +100,13 @@
   background: #ccc;
 }
 .item-inbox-avatar img {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border-radius: 100%;
+  object-fit: cover;
 }
 .item-inbox-right span {
-  font-size: 8px;
+  font-size: 12px;
   display: block;
   margin-left: 4px;
   text-align: left;
@@ -128,7 +129,7 @@
 }
 .header-avatar p {
   color: #ffffff;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .image-round {
@@ -138,4 +139,10 @@
   display: block;
   object-fit: cover;
   margin: auto;
+}
+
+.username-message {
+  font-size: 10px;
+  text-align: left;
+  display: block;
 }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import {typeLocal} from "../consants/index.js";
 
 const axiosClients = axios.create({
   baseURL: 'http://localhost:3000',
@@ -8,6 +9,8 @@ const axiosClients = axios.create({
 // Add a request interceptor
 axiosClients.interceptors.request.use(function (config) {
   // Do something before request is sent
+  const token = localStorage.getItem(typeLocal.ACCESS_TOKEN) || null
+  config.headers.Authorization = token
   return config;
 }, function (error) {
   // Do something with request error
