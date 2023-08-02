@@ -1,43 +1,80 @@
-import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
-import {LIST_MESSAGE} from "../../data.js";
 import {
   Button,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle, InputLabel, MenuItem, Select,
+  DialogTitle, InputLabel, MenuItem, OutlinedInput, Select,
   TextField,
   Typography
 } from "@mui/material";
 import {useEffect, useState} from "react";
 import roomApi from "../../apis/room.api.js";
+import {typeLocal} from "../../consants/index.js";
+import authApi from "../../apis/auth.api.js";
 export default  function HomePage () {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState('public');
   const [listRoom, setListRoom] = useState([])
+  const [roomActive, setRoomActive] = useState('')
+  const [listMessage, setListMessage] = useState([])
+  const [listUser, setListUser] = useState([])
+  const [userSelected, setUserSelected] = useState([])
+  const [roomName, setRoomName] = useState('')
+
+  const user = localStorage.getItem(typeLocal.USER_INFO) ? JSON.parse(localStorage.getItem(typeLocal.USER_INFO)) : null
+
 
   const handleClickOpen = () => {
     setOpen(true);
   };
+  useEffect(() => {
+    getAllRoom()
+    authApi.getUser().then((response) => {
+      setListUser(response.data.users)
+    })
+  }, [])
 
   useEffect(() => {
+  if(roomActive) {
+    roomApi.get(roomActive).then((response) => {
+      console.log(response)
+      setListMessage(response.data.conversation)
+    })
+  }
+  }, [roomActive])
+
+  const getAllRoom = async () => {
     roomApi.getAll().then((response) => {
       console.log(response)
       console.log(response)
       setListRoom(response.data.rooms)
     })
-  }, [])
+  }
 
   const handleClose = () => {
     setOpen(false);
   };
+  const handleSubmit = () => {
+    const payload = {
+      groupName: roomName,
+      type: 'public',
+      userIds: userSelected
+    }
+    roomApi.add(payload).then(() => {
+      getAllRoom()
+    })
+      .finally(() => setOpen(false))
+  }
 
   const handleChange = (event) => {
       setType(event.target.value)
   }
+  const handleChangeSelected = (event) => {
+    const {target: { value },} = event;
+    setUserSelected(typeof value === 'string' ? value.split(',') : value,);
+  };
   return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={0}>
@@ -64,7 +101,7 @@ export default  function HomePage () {
             <div className="list-inbox">
               {
                 listRoom.map((room, index) => (
-                  <div className="item-inbox" key={index}>
+                  <div className={roomActive && roomActive === room._id ? "item-inbox active" : "item-inbox "} key={index} onClick={() => setRoomActive(room._id)}>
                     <div className="item-inbox-avatar">
                       <img src="http://tophinhanhdep.net/wp-content/uploads/2015/12/anh-girl-xinh-9x-1.jpg" alt=""/>
                     </div>
@@ -80,31 +117,33 @@ export default  function HomePage () {
           </div>
         </Grid>
         <Grid item xs={9}>
+          {!roomActive && <h1>Chào mừng bạn đến với Chat App</h1>}
         <div className="data-list">
          <div className="message">
-           {LIST_MESSAGE.map((data) => (
-             <Box key={data.id} sx={{
+           {roomActive  && !listMessage.length ? <div><h1>Bắt đầu trò chuyện nào</h1></div> : null}
+           { (listMessage && listMessage.length ) ? listMessage.map((data) => (
+             <Box key={data._id} sx={{
                display: "flex",
-               justifyContent: data.isAuthor ? "flex-end": "flex-start",
+               justifyContent:user && data.postedByUser._id === user.userid ? "flex-end": "flex-start",
              }}>
                <Box>
-                 {!data.isAuthor && <span className="username-message">Tên người gửi</span>}
+                 { user && data.postedByUser._id !== user.userid && <span className="username-message">{data.postedByUser.username}</span>}
                  <Box  sx={{
-                   textAlign:data.isAuthor ? "right": "left",
+                   textAlign: user && data.postedByUser._id === user.userid ? "right": "left",
                    backgroundColor: "primary.dark",
                    marginBottom: "20px",
                    padding: "4px 10px",
                    width: "fit-content",
-                   opacity: data.isAuthor ? "100%": "70%",
+                   opacity: user && data.postedByUser._id === user.userid? "100%": "70%",
                    color:  "#ffffff",
                    fontSize: "16px",
                    borderRadius: "4px"
                  }}>
-                   <Typography > {data.message}</Typography>
+                   <Typography > {data.message ? data.message.messageText : 'Tin nhắn không được hiện thị'}</Typography>
                  </Box>
                </Box>
              </Box>
-           ))}
+           )) : null}
          </div>
           <div className="input">
             <input type="text" placeholder="Enter your message"/>
@@ -112,10 +151,11 @@ export default  function HomePage () {
         </div>
         </Grid>
       </Grid>
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={handleClose} fullWidth>
         <DialogTitle>Tạo Room</DialogTitle>
         <DialogContent>
           <TextField
+            value={roomName}
             autoFocus
             margin="dense"
             id="otp"
@@ -123,6 +163,7 @@ export default  function HomePage () {
             type="text"
             fullWidth
             variant="standard"
+            onChange={(event) => setRoomName(event.target.value)}
           />
          <Box sx={{marginTop: '20px'}}>
            <InputLabel id="demo-simple-select-label" sx={{marginBottom: '10px'}}>Type</InputLabel>
@@ -137,10 +178,30 @@ export default  function HomePage () {
              <MenuItem value="private">Private</MenuItem>
            </Select>
          </Box>
+          <Box sx={{marginTop: '20px'}}>
+            <InputLabel id="demo-multiple-name-label">Chọn thành viên</InputLabel>
+            <Select
+              labelId="demo-multiple-name-label"
+              id="demo-multiple-name"
+              multiple
+              fullWidth
+              value={userSelected}
+              onChange={handleChangeSelected}
+            >
+              {listUser.map((user) => (
+                <MenuItem
+                  key={user._id}
+                  value={user._id}
+                >
+                  {user.username}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Hủy</Button>
-          <Button onClick={handleClose}>Xác nhận</Button>
+          <Button onClick={handleSubmit}>Xác nhận</Button>
         </DialogActions>
       </Dialog>
     </Box>

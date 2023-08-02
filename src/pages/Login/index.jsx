@@ -18,6 +18,7 @@ export default  function LoginPage () {
       .then((response) => {
         console.log(response)
         localStorage.setItem(typeLocal.ACCESS_TOKEN, response.data.accessToken)
+        localStorage.setItem(typeLocal.USER_INFO, JSON.stringify(response.data.user))
         navigate('/')
       })
     console.log({

@@ -10,11 +10,14 @@ import {
   Typography
 } from "@mui/material";
 import Grid from '@mui/material/Grid';
-import {NavLink} from "react-router-dom";
+import {NavLink, useNavigate} from "react-router-dom";
 import {useState} from "react";
+import authApi from "../../apis/auth.api.js";
 
 export default  function RegisterPage () {
   const [open, setOpen] = useState(false);
+
+  const navigate = useNavigate()
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -27,7 +30,16 @@ export default  function RegisterPage () {
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    handleClickOpen()
+    const data = new FormData(event.currentTarget);
+    const payload = {
+      phonenumber: data.get('phone'),
+      password:data.get('password'),
+      username:data.get('username')
+    }
+    authApi.register(payload).then(() => {
+      navigate('/login')
+    })
+    // handleClickOpen()
   }
   return (
     <Box
@@ -52,6 +64,16 @@ export default  function RegisterPage () {
           label="Số điện thoại"
           name="phone"
           autoComplete="phone"
+          autoFocus
+        />
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="username"
+          label="Tên hiển thị"
+          name="username"
+          autoComplete="username"
           autoFocus
         />
         <TextField
